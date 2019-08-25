@@ -16,75 +16,7 @@ const path = require('path');
 const dataSourceFactory = require('./factories/dataSourceFactory');
 const logger = require('./logger');
 const server = require('./Server');
-
-/**
- * Reads files in a directory recursively and 
- * stores in an object with the file name as key
- * 
- * @param {String} sourceDir 
- * @param {Object} files 
- */
-const recursiveReadObj = (sourceDir, files = {}) => {
-  fs.readdirSync(sourceDir).forEach(file => {
-    if(fs.statSync(path.join(sourceDir, file)).isDirectory()) {
-      recursiveReadObj(path.join(sourceDir, file), files);
-    } else {
-      files[file.split('.')[0]] = require(path.join(sourceDir, file));
-    }
-  });
-  return files;
-};
-
-
-/**
- * Reads files in a directory recursively and 
- * stores in an Array
- * 
- * @param {String} sourceDir 
- * @param {Object} files 
- */
-const recursiveReadArr = (sourceDir, files = []) => {
-  fs.readdirSync(sourceDir).forEach(file => {
-    fs.statSync(path.join(sourceDir, file)).isDirectory()
-      ? recursiveReadArr(path.join(sourceDir, file), files)
-      : files.push(require(path.join(sourceDir, file)));
-
-  });
-  return files;
-};
-
-
-/**
- * reads files from directories
- * @param {Array} sources 
- * @return {Array}
- */
-const readFiles = (sources, obj = true) => {
-  let reader = recursiveReadArr;
-  let accumulator = [];
-  if(obj) {
-    reader = recursiveReadObj;
-    accumulator = {};
-  }
-
-  return sources.reduce((acc, sourceDir) => {
-    return reader(sourceDir, acc);
-  }, accumulator);
-};
-
-
-/**
- * Build dataSources out of dataSource configs
- * @param {Array} dataSourceConfigs
- * @return {Array} Array of dataSources
- */
-const buildDataSources = (dataSourceConfigs) => {
-  return dataSourceConfigs.reduce((dataSources, dataSourceConfig) => {
-    dataSources[dataSourceConfig.name] = dataSourceFactory(dataSourceConfig);
-    return dataSources;
-  }, {});
-};
-
+const { readFiles } = require('./utils');
 
 /**
  * 
@@ -103,8 +35,16 @@ const brew = (config) => {
   // get dataSource configs
   const dataSourceConfigs = readFiles(sources.dataSource, false);
 
-  // build dataSources
-  const datasourceInstances = buildDataSources(dataSourceConfigs);
+  let datasourceInstances = {};
+
+  if (dataSourceConfigs.length > 0) {
+    // build dataSources
+    datasourceInstances = dataSourceConfigs.reduce((dataSources, dataSourceConfig) => {
+      dataSources[dataSourceConfig.name] = dataSourceFactory(dataSourceConfig);
+      return dataSources;
+    }, {});
+  }
+  
   //  build models
   let modelDefinitions = readFiles(sources.model, false);
 
@@ -127,19 +67,27 @@ const brew = (config) => {
   let models = {};
   let datasources = {};
 
-  // create models and datasources
+   // create models and datasources
   Object.keys(modelDefinitions).forEach((key) => {
     const datasourceInstance = datasourceInstances[key];
     const datasourceModels = modelDefinitions[key];
+
+    const thisModels = {};
 
     datasourceModels.forEach((modelDefinition) => {
       const model = modelDefinition.definition(datasourceInstance, datasourceInstance.DataTypes);
       if(datasourceInstance.isSync) {
         model.sync();
       }
-      models[modelDefinition.name] = model;
+      thisModels[modelDefinition.name] = model;
     });
 
+    Object.keys(thisModels).forEach((modelName) => {
+      if(thisModels[modelName].associate) {
+        thisModels[modelName].associate();
+      }
+    });
+    Object.assign(models, thisModels);
     datasources[key] = datasourceInstance;
   });
 
@@ -148,6 +96,7 @@ const brew = (config) => {
   // load middlewares
   const middlewares = readFiles(sources.middleware);
   // load use cases
+
   const useCases = readFiles(sources.app);
   
   // Create DI Container

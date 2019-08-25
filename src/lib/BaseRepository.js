@@ -12,15 +12,6 @@ class BaseRepository {
   }
 
   async add(entity) {
-    const { valid, errors } = entity.validate();
-
-    if(!valid) {
-      const error = new Error('ValidationError');
-      error.details = errors;
-
-      throw error;
-    }
-
     return this.model.create(entity.toJSON());
   }
 
