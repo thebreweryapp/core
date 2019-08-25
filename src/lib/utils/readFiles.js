@@ -1,3 +1,6 @@
+const fs = require('fs');
+const path = require('path');
+
 /**
  * Reads files in a directory recursively and 
  * stores in an object with the file name as key

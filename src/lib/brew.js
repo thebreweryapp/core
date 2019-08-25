@@ -11,8 +11,6 @@ const {
 
 const { scopePerRequest } = require('awilix-express');
 
-const fs = require('fs');
-const path = require('path');
 const dataSourceFactory = require('./factories/dataSourceFactory');
 const logger = require('./logger');
 const server = require('./Server');
