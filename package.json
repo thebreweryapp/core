@@ -1,6 +1,6 @@
 {
-  "name": "brewery-core",
-  "version": "1.0.6",
+  "name": "@brewery/brewery-core",
+  "version": "1.0.0",
   "description": "brewery core module",
   "main": "index.js",
   "scripts": {
@@ -33,5 +33,9 @@
     "structure": "^1.5.0",
     "swagger-sequelize": "^0.1.2",
     "swagger-ui-express": "^2.0.14"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@gitlab.stratpoint.dev:thebrewery/brewery-framework/brewery-core.git"
   }
 }
