@@ -65,7 +65,7 @@ const brew = (config) => {
   let models = {};
   let datasources = {};
 
-   // create models and datasources
+  // create models and datasources
   Object.keys(modelDefinitions).forEach((key) => {
     const datasourceInstance = datasourceInstances[key];
     const datasourceModels = modelDefinitions[key];

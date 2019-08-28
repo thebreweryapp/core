@@ -1,8 +1,5 @@
 const BaseConnector = require('../BaseConnector');
-
-const defaultConnectors = {
-  sql: 'brewery-sql-connector'
-};
+const { defaultConnectors } = require('../../../config');
 
 /**
  * 
