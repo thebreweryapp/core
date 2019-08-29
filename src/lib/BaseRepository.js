@@ -12,7 +12,7 @@ class BaseRepository {
   }
 
   async add(entity) {
-    return this.model.create(entity.toJSON());
+    return this.model.create(entity);
   }
 
   async remove(id) {
