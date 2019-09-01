@@ -47,7 +47,8 @@ class BaseRepository {
 
   async _getById(id) {
     try {
-      return this.model.findByPk(id, { rejectOnEmpty: true });
+      const model = await this.model.findByPk(id, { rejectOnEmpty: true });
+      return model;
     } catch(error) {
       if(error.name === 'SequelizeEmptyResultError') {
         const notFoundError = new Error('NotFoundError');
