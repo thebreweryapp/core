@@ -74,9 +74,6 @@ const brew = (config) => {
 
     datasourceModels.forEach((modelDefinition) => {
       const model = modelDefinition.definition(datasourceInstance, datasourceInstance.DataTypes);
-      if(datasourceInstance.isSync) {
-        model.sync();
-      }
       thisModels[modelDefinition.name] = model;
     });
 
@@ -85,6 +82,11 @@ const brew = (config) => {
         thisModels[modelName].associate();
       }
     });
+
+    if(datasourceInstance.isSync) {
+      datasourceInstance.sync();
+    }
+
     Object.assign(models, thisModels);
     datasources[key] = datasourceInstance;
   });

@@ -1,6 +1,6 @@
 {
   "name": "@brewery/core",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "brewery core module",
   "main": "index.js",
   "scripts": {
