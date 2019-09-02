@@ -7,18 +7,18 @@ class BaseRepository {
     return this.model.findAll(...args);
   }
 
-  async getById(id) {
-    return this._getById(id);
+  async getById(id, options = {}) {
+    return this._getById(id, options);
   }
 
   async add(entity) {
     return this.model.create(entity);
   }
 
-  async remove(id) {
+  async remove(id, options) {
     const entity = await this._getById(id);
 
-    return entity.destroy();
+    return entity.destroy(options);
   }
 
   async update(id, newData) {
@@ -45,10 +45,10 @@ class BaseRepository {
 
   // Private
 
-  async _getById(id) {
+  async _getById(id, options = {}) {
+    options.rejectOnEmpty = true;
     try {
-      const model = await this.model.findByPk(id, { rejectOnEmpty: true });
-      return model;
+      return this.model.findByPk(id, options);
     } catch(error) {
       if(error.name === 'SequelizeEmptyResultError') {
         const notFoundError = new Error('NotFoundError');
