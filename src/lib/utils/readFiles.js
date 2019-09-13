@@ -15,21 +15,21 @@ const recursiveReadObj = (source, files = {}) => {
     try {
       if(fs.statSync(source).isDirectory()) {
         fs.readdirSync(source)
-        .filter((file) => {
-          return (file.indexOf('.') !== 0) && fs.statSync(path.join(source, file)).isDirectory() ? true : file.slice(-3) === '.js';
-        })
-        .forEach(file => { const deb = path.join(source, file)
-          if(fs.statSync(path.join(source, file)).isDirectory()) {
-            recursiveReadObj(path.join(source, file), files);
-          } else {
-            files[file.split('.')[0]] = require(path.join(source, file));
-          }
-        });
+          .filter((file) => {
+            return (file.indexOf('.') !== 0) && fs.statSync(path.join(source, file)).isDirectory() ? true : file.slice(-3) === '.js';
+          })
+          .forEach(file => {
+            if(fs.statSync(path.join(source, file)).isDirectory()) {
+              recursiveReadObj(path.join(source, file), files);
+            } else {
+              files[file.split('.')[0]] = require(path.join(source, file));
+            }
+          });
       } else {
         const fileName = path.basename(source);
         const ext = fileName.slice(-3);
         if(ext !== '.js') {
-          reject(`Invalid file ${fileName} in source ${source}`)
+          reject(`Invalid file ${fileName} in source ${source}`);
         }
         files[fileName.split('.')[0]] = require(source);
       }
