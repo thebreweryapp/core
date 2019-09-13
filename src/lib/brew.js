@@ -18,20 +18,10 @@ const { readFiles } = require('./utils');
 
 /**
  * 
- * @param {Object} config
- * @property {Array} models array string of directories where models are located
- * @property {Array} dataSources array string of directories where dataSources config are located
- * 
- * @return {Object}
+ * @param {Array} modelDefinitions 
+ * @param {Array} dataSourceConfigs 
  */
-const brew = (config) => {
-
-  const { sources } = config.app;
-
-  // get router
-  const router = require(sources.router);
-  // get dataSource configs
-  const dataSourceConfigs = readFiles(sources.dataSource, false);
+const buildModelsAndDatasources = (modelDefinitions, dataSourceConfigs) => {
 
   let datasourceInstances = {};
 
@@ -43,11 +33,8 @@ const brew = (config) => {
     }, {});
   }
   
-  //  build models
-  let modelDefinitions = readFiles(sources.model, false);
-
   // group models by datasource
-  modelDefinitions = modelDefinitions.reduce((acc, val) => {
+  const modelDefinitionsByDatasource = modelDefinitions.reduce((acc, val) => {
     if(!(val.datasource in datasourceInstances)) {
       throw new Error (`Datasource "${val.datasource}" defined in model "${val.name}" doesnt exist`);
     }
@@ -62,14 +49,14 @@ const brew = (config) => {
     return acc;
   }, {});
 
+
   let models = {};
   let datasources = {};
 
   // create models and datasources
-  Object.keys(modelDefinitions).forEach((key) => {
+  Object.keys(modelDefinitionsByDatasource).forEach((key) => {
     const datasourceInstance = datasourceInstances[key];
-    const datasourceModels = modelDefinitions[key];
-
+    const datasourceModels = modelDefinitionsByDatasource[key];
     const thisModels = {};
 
     datasourceModels.forEach((modelDefinition) => {
@@ -91,15 +78,51 @@ const brew = (config) => {
     datasources[key] = datasourceInstance;
   });
 
-  // load repositories
-  const repositories = readFiles(sources.repository);
-  // load middlewares
-  const middlewares = readFiles(sources.middleware);
-  // load use cases
+  return {
+    models,
+    datasources
+  };
+};
 
-  const useCases = readFiles(sources.app);
+
+/**
+ * 
+ * @param {Object} config
+ * @property {Array} models array string of directories where models are located
+ * @property {Array} dataSources array string of directories where dataSources config are located
+ * 
+ * @return {Object}
+ */
+const brew = (config) => {
+
+  const { sources } = config.app;
+
+  /**
+   * load sources
+   */
+  const [
+    useCases,
+    dataSourceConfigs,
+    modelDefinitions,
+    repositories,
+    middlewares
+  ] = Promise.all([
+    readFiles(sources.app),
+    readFiles(sources.dataSource, false),
+    readFiles(sources.model, false),
+    readFiles(sources.repository),
+    readFiles(sources.middleware)
+  ]);
+  const router = require(sources.router);
+
+  /**
+   * Build Models and Datasources
+   */
+  const { models, datasources } = buildModelsAndDatasources(modelDefinitions, dataSourceConfigs);
   
-  // Create DI Container
+  /**
+   * Create DI Container
+   */
   const container = createContainer();
 
   // System
@@ -151,5 +174,6 @@ const brew = (config) => {
     server: container.resolve('server')
   };
 };
+
 
 module.exports = brew;
