@@ -52,31 +52,25 @@ const recursiveReadObj = (source, files = {}) => {
  * @return {Promise}
  */
 const recursiveReadArr = (source, files = []) => {
-  return new Promise((resolve, reject) => {
-    try {
-      if(fs.statSync(source).isDirectory()) {
-        fs.readdirSync(source)
-          .filter((file) => {
-            return (file.indexOf('.') !== 0) && fs.statSync(path.join(source, file)).isDirectory() ? true : file.slice(-3) === '.js';
-          })  
-          .forEach(file => {
-            fs.statSync(path.join(source, file)).isDirectory()
-              ? recursiveReadArr(path.join(source, file), files)
-              : files.push(require(path.join(source, file)));
-          });
-      } else {
-        const fileName = path.basename(source);
-        const ext = fileName.slice(-3);
-        if(ext !== '.js') {
-          reject(`Invalid file ${fileName} in source ${source}`)
-        }
-        files.push(require(source));
-      }
-      resolve(files);
-    } catch(err) {
-      reject(err);
+  if(fs.statSync(source).isDirectory()) {
+    fs.readdirSync(source)
+      .filter((file) => {
+        return (file.indexOf('.') !== 0) && fs.statSync(path.join(source, file)).isDirectory() ? true : file.slice(-3) === '.js';
+      })  
+      .forEach(file => {
+        fs.statSync(path.join(source, file)).isDirectory()
+          ? recursiveReadArr(path.join(source, file), files)
+          : files.push(require(path.join(source, file)));
+      });
+  } else {
+    const fileName = path.basename(source);
+    const ext = fileName.slice(-3);
+    if(ext !== '.js') {
+      throw new Error(`Invalid file ${fileName} in source ${source}`);
     }
-  });
+    files.push(require(source));
+  }
+  return files;
 };
 
 
@@ -86,18 +80,23 @@ const recursiveReadArr = (source, files = []) => {
  * @return {Promise}
  */
 const readFiles = (sources, obj = true) => {
-  let reader = recursiveReadArr;
-  let accumulator = [];
-  if(obj) {
-    reader = recursiveReadObj;
-    accumulator = {};
-  }
+  return new Promise((resolve, reject) => {
+    let reader = recursiveReadArr;
+    let accumulator = [];
+    if(obj) {
+      reader = recursiveReadObj;
+      accumulator = {};
+    }
 
-  const files = sources.reduce((acc, source) => {
-    return reader(source, acc);
-  }, accumulator);
-
-  return Promise.all(files);
+    try {
+      const files = sources.reduce((acc, source) => {
+        return reader(source, acc);
+      }, accumulator);
+      resolve(files);
+    }catch(err) {
+      reject(err);
+    }
+  });
 };
 
 module.exports = readFiles;
