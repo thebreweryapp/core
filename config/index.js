@@ -1,5 +1,5 @@
 module.exports = {
   defaultConnectors: {
-    sql: '@brewery/sql-connector'
+    sql: '@amberjs/sql-connector'
   }
 };

@@ -1,6 +1,6 @@
 {
   "name": "@amberjs/core",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "Amber.js core module",
   "main": "index.js",
   "scripts": {
