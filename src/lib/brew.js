@@ -10,7 +10,7 @@ const brew = (config, cb) => {
   app
     ._boot()
     .then(() => {
-      cb(app);
+      cb(null, app);
     })
     .catch(err => {
       cb(err);

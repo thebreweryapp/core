@@ -41,6 +41,7 @@ class Application {
         modelDefinitions,
         repositories,
         middlewares,
+        controllers,
         router
       ]) => {
         // Build Models and Datasources
@@ -57,6 +58,7 @@ class Application {
         this._setRepositories(repositories);
         this._setContainerMiddleware();
         this._setMiddlewares(middlewares);
+        this._setControllers(controllers);
         this._setLogger(logger);
         this._setRouter(router);
         this._setServer(server);
@@ -120,6 +122,16 @@ class Application {
     );
   }
 
+  _setControllers(controllers) {
+    this.controllers = controllers;
+    this.container.register(
+      Object.keys(controllers).reduce((acc, val) => {
+        acc[val] = asClass(controllers[val], { lifetime: Lifetime.SINGLETON });
+        return acc;
+      }, {})
+    );
+  }
+
   _setRouter(router) {
     this.router = router;
     this.container.register({
@@ -154,7 +166,8 @@ class Application {
       readFiles(sources.dataSource, false),
       readFiles(sources.model, false),
       readFiles(sources.repository),
-      readFiles(sources.middleware)
+      readFiles(sources.middleware),
+      readFiles(sources.controller)
     ]).then(result => {
       result.push(require(sources.router));
       return result;
