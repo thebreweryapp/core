@@ -1,4 +1,4 @@
-const logger = require('brewery-log');
+const logger = require('@amberjs/log');
 
 module.exports = ({ config }) => {
   try {
