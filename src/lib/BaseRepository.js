@@ -1,18 +1,40 @@
 class BaseRepository {
-  constructor(model) {
+  constructor(model, toEntity = null, toDatabase = null) {
     this.model = model;
+    this.toEntity = toEntity;
+    this.toDatabase = toDatabase;
   }
 
   async getAll(...args) {
-    return this.model.findAll(...args);
+    const results = await this.model.findAll(...args);
+
+    if (this.toEntity) {
+      return results.map(result => {
+        return this.toEntity(result);
+      });
+    } else {
+      return results;
+    }
   }
 
   async getById(id, options = {}) {
-    return this._getById(id, options);
+    const result = await this._getById(id, options);
+
+    if (this.toEntity) {
+      return this.toEntity(result);
+    } else {
+      return result;
+    }
   }
 
   async add(entity) {
-    return this.model.create(entity);
+    const result = await this.model.create(entity);
+
+    if (this.toEntity) {
+      return this.toEntity(result);
+    } else {
+      return result;
+    }
   }
 
   async remove(id, options) {
@@ -31,7 +53,11 @@ class BaseRepository {
 
       await transaction.commit();
 
-      return updatedEntity;
+      if (this.toEntity) {
+        return this.toEntity(updatedEntity);
+      } else {
+        return updatedEntity;
+      }
     } catch (error) {
       await transaction.rollback();
 
