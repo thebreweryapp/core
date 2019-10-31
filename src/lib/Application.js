@@ -232,7 +232,11 @@ class Application {
       });
 
       if (datasourceInstance.isSync) {
-        datasourceInstance.sync();
+        if (datasourceInstance.alter) {
+          datasourceInstance.sync({ alter: true });
+        } else {
+          datasourceInstance.sync();
+        }
       }
 
       Object.assign(models, thisModels);
